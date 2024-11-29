@@ -1,0 +1,73 @@
+//
+//  .gitignore
+//  MTG Lifecounter
+//
+//  Created by Snowye on 22/10/24.
+//
+
+.DS_Store
+
+
+# Ignore build outputs
+bin/
+obj/
+
+# Ignore user-specific files
+*.user
+*.userosscache
+*.suo
+*.sln.docstates
+
+# Ignore auto-generated files
+*.vspscc
+*.vssscc
+.vscode/
+.vs/
+.idea/
+_ReSharper.Caches/
+
+# Ignore Rider project files
+.idea/
+*.sln.iml
+
+# Ignore NuGet Packages
+*.nupkg
+packages/
+project.lock.json
+project.fragment.lock.json
+
+# Ignore dotnet CLI output
+artifacts/
+project.json.lock
+
+# Ignore Publish outputs
+.publish/
+
+# Ignore Code Coverage and testing
+TestResults/
+*.coverage
+*.coveragexml
+*.testlog
+*.trx
+
+# Ignore Azure build artifacts
+.csx/
+*.build.csdef
+*.build.csx
+ServiceConfiguration.*
+
+# Ignore configurations
+appsettings*.json
+secrets.json
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# macOS
+.DS_Store
+
+# Logs and temporary files
+*.log
+*.temp
