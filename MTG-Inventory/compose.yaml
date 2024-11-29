@@ -1,0 +1,6 @@
+﻿services:
+  mtg-inventory:
+    image: mtg-inventory
+    build:
+      context: .
+      dockerfile: MTG-Inventory/Dockerfile
