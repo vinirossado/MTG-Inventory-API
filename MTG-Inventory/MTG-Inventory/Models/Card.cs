@@ -26,14 +26,6 @@ public class Card
     public List<CardDeck> CardDecks { get; set; } = [];
 }
 
-public enum Rarity
-{
-    Common,
-    Uncommon,
-    Rare,
-    Mythic
-}
-
 public class FilteredCard
 {
     public string Name { get; set; }

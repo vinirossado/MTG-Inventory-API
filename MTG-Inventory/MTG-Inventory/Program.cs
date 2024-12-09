@@ -1,8 +1,5 @@
 using System.Text.Json.Serialization;
 using Microsoft.EntityFrameworkCore;
-using MTG_Card_Checker;
-using MTG_Card_Checker.Repository;
-using MTG_Card_Checker.Repository.External.Scryfall;
 using MTG_Inventory;
 using MTG_Inventory.Repository;
 using MTG_Inventory.Service;
@@ -24,8 +21,9 @@ builder.Services.AddCors(options =>
 
 builder.Services.AddControllers().AddJsonOptions(options =>
 {
-    options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.Preserve;
+    options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
     options.JsonSerializerOptions.AllowOutOfOrderMetadataProperties = true;
+    options.JsonSerializerOptions.PropertyNamingPolicy = null;
 });
 
 builder.Services.AddEndpointsApiExplorer();
@@ -55,6 +53,10 @@ if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
     app.MapScalarApiReference();
+    // app.UseSwaggerUI(options =>
+    // {
+    //     options.SwaggerEndpoint("/openapi/v1.json", "MTG-Inventory");
+    // });
 }
 // Configure the HTTP request pipeline
 

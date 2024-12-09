@@ -27,25 +27,70 @@ public class CardRepository(AppDbContext context)
         return await context.Card.Where(x => x.TypeLine == null).ToListAsync();
     }
 
-    public async Task<(IList<Card>, IList<int>)>  GetMissingCards(IList<Card> cards)
+    public List<FilteredCard> GetMissingCards(IList<Card>? cardsFromFile, IList<Card> allCardsInDb)
     {
-        var cardNames = cards.Select(c => c.Name).ToList();
+        if (cardsFromFile == null) return [];
 
-        var existingCardNames = await context.Card
-            .Where(dbCard => cardNames.Contains(dbCard.Name))
-            .Select(dbCard => dbCard.Name)
-            .ToListAsync();
-        
-        var existingCardIds = await context.Card
-            .Where(dbCard => cardNames.Contains(dbCard.Name))
-            .Select(dbCard => dbCard.Id)
-            .ToListAsync();
-
-        var missingCards = cards
-            .Where(c => !existingCardNames.Contains(c.Name))
+        var missingCards = cardsFromFile
+            .Where(card => allCardsInDb.All(dbCard => dbCard.Name != card.Name))
+            .Select(card => new FilteredCard
+            {
+                Name = card.Name,
+                Quantity = 1
+            }).OrderBy(x => x.Name)
             .ToList();
 
-        return (missingCards, existingCardIds);
+        missingCards.AddRange(cardsFromFile
+            .Where(card => allCardsInDb.Any(dbCard =>
+                dbCard.Name == card.Name &&
+                card.Quantity > dbCard.Quantity - dbCard.InUse))
+            .Select(card =>
+            {
+                var dbCard = allCardsInDb.FirstOrDefault(dbCard => dbCard.Name == card.Name);
+                return new FilteredCard
+                {
+                    Name = card.Name,
+                    Quantity = (card.Quantity - ((dbCard?.Quantity ?? 0) - (dbCard?.InUse ?? 0)))!
+                };
+            }).OrderBy(x => x.Name)
+            .ToList());
+
+        return missingCards;
+    }
+    
+    public List<FilteredCard> GetFoundCards(IList<Card> cardsFromFile, IList<Card> allCardsInDb)
+    {
+        return cardsFromFile
+            .Where(card => allCardsInDb.Any(dbCard => dbCard.Name == card.Name && card.Quantity <= dbCard.Quantity - dbCard.InUse))
+            .Select(card => new FilteredCard
+            {
+                Name = card.Name,
+                Quantity = card.Quantity
+            }).OrderBy(x => x.Name)
+            .ToList();
+    }
+    
+    public async Task<IList<Card>> GetMissingCardsToImport(IList<Card> cards)
+    {
+        var allCardsInDatabase = await context.Card
+            .Select(dbCard => new Card
+            {
+                Id = dbCard.Id,
+                Name = dbCard.Name.Trim().ToUpper(),
+                Quantity = dbCard.Quantity,
+                ExpansionName = dbCard.ExpansionName!.Trim().ToUpper()
+            })
+            .ToListAsync();
+
+        var extraCards = cards.Where(x => !allCardsInDatabase.Any(dbCard =>
+            dbCard.Name.Equals(x.Name.Trim(), StringComparison.CurrentCultureIgnoreCase) &&
+            dbCard.ExpansionName == x.ExpansionName?.Trim().ToUpper() &&
+            dbCard.Quantity == x.Quantity
+        )).ToList();
+
+        Console.WriteLine($"Total no banco: {allCardsInDatabase.Count}, Não na lista: {extraCards.Count}");
+
+        return extraCards;
     }
 
     public async Task Update(Card card)
@@ -58,10 +103,5 @@ public class CardRepository(AppDbContext context)
     {
         context.Card.UpdateRange(cards);
         await context.SaveChangesAsync();
-    }
-
-    public async Task<List<Card>> SelectXCards(int amount)
-    {
-        return await context.Card.Take(amount).ToListAsync();
     }
 }
