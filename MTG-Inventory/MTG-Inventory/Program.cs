@@ -1,6 +1,7 @@
 using System.Text.Json.Serialization;
 using Microsoft.EntityFrameworkCore;
 using MTG_Inventory;
+using MTG_Inventory.Mapping;
 using MTG_Inventory.Repository;
 using MTG_Inventory.Service;
 using MTG_Inventory.Service.External.Scryfall;
@@ -20,6 +21,7 @@ builder.Services.AddCors(options =>
 });
 
 builder.Services.AddHealthChecks();
+MappingConfig.Configure();
 
 builder.Services.AddControllers().AddJsonOptions(options =>
 {

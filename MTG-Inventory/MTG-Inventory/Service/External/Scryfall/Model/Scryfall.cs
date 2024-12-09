@@ -51,6 +51,9 @@ public class Scryfall
 
     [JsonPropertyName("image_status")]
     public string ImageStatus { get; set; }
+    
+    [JsonPropertyName("card_faces")]
+    public List<CardFace> CardFaces { get; set; }
 
     [JsonPropertyName("image_uris")]
     public ImageUris ImageUris { get; set; }
@@ -189,6 +192,12 @@ public class Scryfall
 
     [JsonPropertyName("purchase_uris")]
     public PurchaseUris PurchaseUris { get; set; }
+}
+
+public class CardFace
+{
+    [JsonPropertyName("image_uris")]
+    public ImageUris ImageUris { get; set; }
 }
 
 public class ImageUris

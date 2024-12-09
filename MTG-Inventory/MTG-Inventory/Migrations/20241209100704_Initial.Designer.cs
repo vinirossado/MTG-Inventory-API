@@ -11,8 +11,8 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace MTG_Inventory.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20241209055016_Test")]
-    partial class Test
+    [Migration("20241209100704_Initial")]
+    partial class Initial
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)

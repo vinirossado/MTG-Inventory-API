@@ -1,4 +1,5 @@
 using System.Globalization;
+using System.Text.RegularExpressions;
 using CsvHelper;
 using CsvHelper.Configuration;
 using Microsoft.Extensions.Caching.Memory;
@@ -33,7 +34,7 @@ public class CardService(CardRepository cardRepository, ScryfallService scryfall
         {
             if (card.TypeLine == null) continue;
 
-            card.IsCommander = card.TypeLine.Contains("Legendary Creature") || card.TypeLine.Contains("Summon Legend");
+            card.IsCommander = Regex.IsMatch(card.TypeLine, @"Legendary\s*Creature|Summon\s*Legend", RegexOptions.IgnoreCase);
         }
 
         return Task.CompletedTask;
@@ -41,12 +42,11 @@ public class CardService(CardRepository cardRepository, ScryfallService scryfall
 
     public async Task Sync()
     {
-        var cards = await cardRepository.GetMissingSyncCards();
+        var cards = await cardRepository.GetCardsWithNoImage();
         await scryfallService.GetCard(cards);
 
         await cardRepository.Update(cards);
-
-        await RefreshCache();
+        memoryCache.Set(CacheKey, cards);
     }
 
     public async Task<(List<FilteredCard> foundCards, List<FilteredCard> missingCards)> CompareWantListWithDb(IFormFile file)
@@ -92,5 +92,12 @@ public class CardService(CardRepository cardRepository, ScryfallService scryfall
     {
         var updatedCards = await cardRepository.Get();
         memoryCache.Set(CacheKey, updatedCards);
+    }
+    
+    public async Task<PagedResponseKeyset<Card>> GetCardsWithPagination(
+        int reference, int pageSize)
+    {
+        return await cardRepository.GetCardsWithPagination(
+            reference, pageSize);
     }
 }

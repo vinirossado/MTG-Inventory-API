@@ -19,7 +19,12 @@ public class CardRepository(AppDbContext context)
 
     public async Task<List<Card>> Get()
     {
-        return await context.Card.ToListAsync();
+        return await context.Card.AsNoTracking().ToListAsync();
+    }
+    
+    public async Task<List<Card>> GetCardsWithNoImage()
+    {
+        return await context.Card.Where(x=> x.ImageUri == null).ToListAsync();
     }
 
     public async Task<List<Card>> GetMissingSyncCards()
@@ -81,18 +86,18 @@ public class CardRepository(AppDbContext context)
                 ExpansionName = dbCard.ExpansionName!.Trim().ToUpper()
             })
             .ToListAsync();
-
+    
         var extraCards = cards.Where(x => !allCardsInDatabase.Any(dbCard =>
             dbCard.Name.Equals(x.Name.Trim(), StringComparison.CurrentCultureIgnoreCase) &&
             dbCard.ExpansionName == x.ExpansionName?.Trim().ToUpper() &&
             dbCard.Quantity == x.Quantity
         )).ToList();
-
+    
         Console.WriteLine($"Total no banco: {allCardsInDatabase.Count}, Não na lista: {extraCards.Count}");
-
+    
         return extraCards;
     }
-
+    
     public async Task Update(Card card)
     {
         context.Card.Update(card);
@@ -103,5 +108,20 @@ public class CardRepository(AppDbContext context)
     {
         context.Card.UpdateRange(cards);
         await context.SaveChangesAsync();
+    }
+    
+    public async Task<PagedResponseKeyset<Card>> GetCardsWithPagination(int reference, int pageSize)
+    {
+        var cards = await context.Card.AsNoTracking()
+            .OrderBy(x => x.Id)
+            .Where(p => p.Id > reference)
+            .Take(pageSize)
+            .ToListAsync();
+
+        var newReference = cards.Count != 0 ? cards.Last().Id : 0;
+
+        var pagedResponse = new PagedResponseKeyset<Card>(cards, newReference);
+
+        return pagedResponse;
     }
 }

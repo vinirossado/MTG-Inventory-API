@@ -82,7 +82,7 @@ namespace MTG_Inventory.Service.External.Scryfall
             card.TypeLine = data.TypeLine;
             card.ColorIdentity = string.Join(",", data.ColorIdentity);
             card.OracleId = data.Id;
-            card.ImageUri = data.ImageUris?.Large;
+            card.ImageUri = data.ImageUris?.Large ?? data.CardFaces.FirstOrDefault()?.ImageUris.Large;
             card.Price = data.Prices?.Eur;
             card.Rarity = data.Rarity.ToUpper();
             card.IsCommander = data.TypeLine.Contains("Legendary Creature") || data.TypeLine.Contains("Summon Legend");
