@@ -19,6 +19,8 @@ builder.Services.AddCors(options =>
         });
 });
 
+builder.Services.AddHealthChecks();
+
 builder.Services.AddControllers().AddJsonOptions(options =>
 {
     options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
@@ -48,15 +50,12 @@ builder.Services.AddScoped<CardDeckRepository>();
 builder.Services.AddOpenApi();
 
 var app = builder.Build();
+app.MapHealthChecks("/healthz");
 
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
     app.MapScalarApiReference();
-    // app.UseSwaggerUI(options =>
-    // {
-    //     options.SwaggerEndpoint("/openapi/v1.json", "MTG-Inventory");
-    // });
 }
 // Configure the HTTP request pipeline
 
