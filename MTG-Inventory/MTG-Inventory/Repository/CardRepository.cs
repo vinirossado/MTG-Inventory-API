@@ -115,16 +115,16 @@ public class CardRepository(AppDbContext context)
     {
         var query = context.Card.AsQueryable();
 
-        if (!string.IsNullOrWhiteSpace(filters.Name))
+        if (!string.IsNullOrWhiteSpace(filters?.Name))
             query = query.Where(card => card.Name.Contains(filters.Name));
 
-        if (!string.IsNullOrWhiteSpace(filters.ColorIdentity))
+        if (!string.IsNullOrWhiteSpace(filters?.ColorIdentity))
             query = query.Where(card => card.ColorIdentity == filters.ColorIdentity.ToUpper());
         
-        if (!string.IsNullOrWhiteSpace(filters.TypeLine))
+        if (!string.IsNullOrWhiteSpace(filters?.TypeLine))
             query = query.Where(card => card.TypeLine != null && card.TypeLine.ToUpper() == filters.TypeLine.ToUpper());
         
-        if (filters.CMC != null)
+        if (filters?.CMC != null)
             query = query.Where(card => Equals(card.CMC, filters.CMC));
         
         var cards = await query
