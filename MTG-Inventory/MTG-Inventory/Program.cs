@@ -28,6 +28,7 @@ builder.Services.AddControllers().AddJsonOptions(options =>
     options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
     options.JsonSerializerOptions.AllowOutOfOrderMetadataProperties = true;
     options.JsonSerializerOptions.PropertyNamingPolicy = null;
+    options.JsonSerializerOptions.PropertyNameCaseInsensitive = true;
 });
 
 builder.Services.AddEndpointsApiExplorer();

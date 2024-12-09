@@ -3,6 +3,7 @@ using System.Text.RegularExpressions;
 using CsvHelper;
 using CsvHelper.Configuration;
 using Microsoft.Extensions.Caching.Memory;
+using MTG_Inventory.Dtos;
 using MTG_Inventory.Helpers;
 using MTG_Inventory.Models;
 using MTG_Inventory.Repository;
@@ -95,9 +96,9 @@ public class CardService(CardRepository cardRepository, ScryfallService scryfall
     }
     
     public async Task<PagedResponseKeyset<Card>> GetCardsWithPagination(
-        int reference, int pageSize)
+        int reference, int pageSize, CardFilterDto filters)
     {
         return await cardRepository.GetCardsWithPagination(
-            reference, pageSize);
+            reference, pageSize, filters);
     }
 }

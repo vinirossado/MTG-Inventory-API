@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using MTG_Inventory.Dtos;
 using MTG_Inventory.Models;
 
 namespace MTG_Inventory.Repository;
@@ -110,10 +111,24 @@ public class CardRepository(AppDbContext context)
         await context.SaveChangesAsync();
     }
     
-    public async Task<PagedResponseKeyset<Card>> GetCardsWithPagination(int reference, int pageSize)
+    public async Task<PagedResponseKeyset<Card>> GetCardsWithPagination(int reference, int pageSize, CardFilterDto filters)
     {
-        var cards = await context.Card.AsNoTracking()
-            .OrderBy(x => x.Id)
+        var query = context.Card.AsQueryable();
+
+        if (!string.IsNullOrWhiteSpace(filters.Name))
+            query = query.Where(card => card.Name.Contains(filters.Name));
+
+        if (!string.IsNullOrWhiteSpace(filters.ColorIdentity))
+            query = query.Where(card => card.ColorIdentity == filters.ColorIdentity.ToUpper());
+        
+        if (!string.IsNullOrWhiteSpace(filters.TypeLine))
+            query = query.Where(card => card.TypeLine != null && card.TypeLine.ToUpper() == filters.TypeLine.ToUpper());
+        
+        if (filters.CMC != null)
+            query = query.Where(card => Equals(card.CMC, filters.CMC));
+        
+        var cards = await query
+            .OrderBy(card => card.Id)
             .Where(p => p.Id > reference)
             .Take(pageSize)
             .ToListAsync();

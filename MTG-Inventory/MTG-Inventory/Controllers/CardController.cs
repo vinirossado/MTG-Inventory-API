@@ -1,8 +1,8 @@
 using System.ComponentModel.DataAnnotations;
+using System.Text.Json;
 using Mapster;
 using Microsoft.AspNetCore.Mvc;
 using MTG_Inventory.Dtos;
-using MTG_Inventory.Helpers;
 using MTG_Inventory.Models;
 using MTG_Inventory.Service;
 
@@ -60,19 +60,33 @@ public class CardController(CardService cardService) : ControllerBase
     {
         await cardService.Sync();
 
-        return Ok(new { message = "Commanders has been set!" });
+        return Ok(new { message = "Cards has been sync!" });
     }
 
     [HttpGet("GetCardsWithPagination")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    public async Task<IActionResult> GetCardsWithPagination(
-        int reference = 0, int pageSize = 10)
+    public async Task<ActionResult<PagedResponseKeysetDto<CardResultDto>>> GetCardsWithPagination(
+        int reference = 0, int pageSize = 10, [FromQuery] string? filters = null)
     {
         if (pageSize <= 0)
             return BadRequest($"{nameof(pageSize)} size must be greater than 0.");
 
-        var pagedCards = await cardService.GetCardsWithPagination(reference, pageSize);
+        CardFilterDto? filterDto = null;
+
+        if (!string.IsNullOrEmpty(filters))
+        {
+            try
+            {
+                filterDto = JsonSerializer.Deserialize<CardFilterDto>(filters);
+            }
+            catch (JsonException)
+            {
+                return BadRequest("Invalid filters format.");
+            }
+        }
+
+        var pagedCards = await cardService.GetCardsWithPagination(reference, pageSize, filterDto);
 
         var pagedCardsDto = pagedCards.Adapt<PagedResponseKeysetDto<CardResultDto>>();
 
