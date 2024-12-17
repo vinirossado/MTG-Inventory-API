@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Query.SqlExpressions;
 using MTG_Inventory.Dtos;
 using MTG_Inventory.Models;
 
@@ -26,11 +27,6 @@ public class CardRepository(AppDbContext context)
     public async Task<List<Card>> GetCardsWithNoImage()
     {
         return await context.Card.Where(x=> x.ImageUri == null).ToListAsync();
-    }
-
-    public async Task<List<Card>> GetMissingSyncCards()
-    {
-        return await context.Card.Where(x => x.TypeLine == null).ToListAsync();
     }
 
     public List<FilteredCard> GetMissingCards(IList<Card>? cardsFromFile, IList<Card> allCardsInDb)
@@ -111,32 +107,36 @@ public class CardRepository(AppDbContext context)
         await context.SaveChangesAsync();
     }
     
-    public async Task<PagedResponseKeyset<Card>> GetCardsWithPagination(int reference, int pageSize, CardFilterDto filters)
+    public async Task<PagedResponseKeyset<Card>> GetCardsWithPagination(
+        int reference, int pageSize, CardFilterDto filters)
     {
         var query = context.Card.AsQueryable();
 
-        if (!string.IsNullOrWhiteSpace(filters?.Name))
-            query = query.Where(card => card.Name.Contains(filters.Name));
+        if (filters.Name != null || filters.ColorIdentity != null || filters.TypeLine != null || filters.CMC != null)
+        {
+            if (!string.IsNullOrWhiteSpace(filters.Name))
+                query = query.Where(card => card.Name.Contains(filters.Name));
 
-        if (!string.IsNullOrWhiteSpace(filters?.ColorIdentity))
-            query = query.Where(card => card.ColorIdentity == filters.ColorIdentity.ToUpper());
-        
-        if (!string.IsNullOrWhiteSpace(filters?.TypeLine))
-            query = query.Where(card => card.TypeLine != null && card.TypeLine.ToUpper() == filters.TypeLine.ToUpper());
-        
-        if (filters?.CMC != null)
-            query = query.Where(card => Equals(card.CMC, filters.CMC));
-        
-        var cards = await query
+            if (!string.IsNullOrWhiteSpace(filters.ColorIdentity))
+                query = query.Where(card => card.ColorIdentity != null 
+                                            && card.ColorIdentity.ToUpper() == filters.ColorIdentity.ToUpper());
+
+            if (!string.IsNullOrWhiteSpace(filters.TypeLine))
+                query = query.Where(card => card.TypeLine != null 
+                                            && card.TypeLine.ToUpper() == filters.TypeLine.ToUpper());
+
+            if (filters.CMC.HasValue)
+                query = query.Where(card => card.CMC == filters.CMC.Value);
+        }
+
+        var paginatedCards = await query
             .OrderBy(card => card.Id)
-            .Where(p => p.Id > reference)
+            .Where(card => card.Id > reference)
             .Take(pageSize)
             .ToListAsync();
 
-        var newReference = cards.Count != 0 ? cards.Last().Id : 0;
+        var newReference = paginatedCards.Any() ? paginatedCards.Last().Id : 0;
 
-        var pagedResponse = new PagedResponseKeyset<Card>(cards, newReference);
-
-        return pagedResponse;
+        return new(paginatedCards, newReference);
     }
 }

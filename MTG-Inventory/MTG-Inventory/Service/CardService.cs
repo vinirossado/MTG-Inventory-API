@@ -89,7 +89,7 @@ public class CardService(CardRepository cardRepository, ScryfallService scryfall
         return cachedCards;
     }
 
-    public async Task RefreshCache()
+    private async Task RefreshCache()
     {
         var updatedCards = await cardRepository.Get();
         memoryCache.Set(CacheKey, updatedCards);
@@ -98,7 +98,11 @@ public class CardService(CardRepository cardRepository, ScryfallService scryfall
     public async Task<PagedResponseKeyset<Card>> GetCardsWithPagination(
         int reference, int pageSize, CardFilterDto filters)
     {
-        return await cardRepository.GetCardsWithPagination(
+        var cards =  await cardRepository.GetCardsWithPagination(
             reference, pageSize, filters);
+        
+        // memoryCache.Set(CacheKey, cards);
+
+        return cards;
     }
 }
