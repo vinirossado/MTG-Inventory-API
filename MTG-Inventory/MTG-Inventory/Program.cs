@@ -64,6 +64,7 @@ if (app.Environment.IsDevelopment())
 // Configure the HTTP request pipeline
 
 app.UseCors("AllowSpecificOrigins");
+// app.UseDelta(shouldExecute: context => context.Request.Path.ToString().Contains("card"));
 
 app.UseHttpsRedirection();
 app.MapControllers();
