@@ -2,6 +2,7 @@ using System.Globalization;
 using System.Text.RegularExpressions;
 using CsvHelper;
 using CsvHelper.Configuration;
+using Mapster;
 using Microsoft.Extensions.Caching.Memory;
 using MTG_Inventory.Dtos;
 using MTG_Inventory.Helpers;
@@ -98,11 +99,33 @@ public class CardService(CardRepository cardRepository, ScryfallService scryfall
     public async Task<PagedResponseKeyset<Card>> GetCardsWithPagination(
         int reference, int pageSize, CardFilterDto filters)
     {
-        var cards =  await cardRepository.GetCardsWithPagination(
-            reference, pageSize, filters);
-        
-        // memoryCache.Set(CacheKey, cards);
 
-        return cards;
+        var allCards = await GetCardsFromCache();
+        if(allCards.Count <= 0)
+        {
+            allCards = await cardRepository.Get();
+            memoryCache.Set(CacheKey, allCards);
+        }
+        
+        var cardsFiltered = allCards
+            .Where(card => filters?.Name == null || card.Name.Contains(filters?.Name, StringComparison.CurrentCultureIgnoreCase))
+            .Where(card => filters?.IsCommander == null || card.IsCommander == filters?.IsCommander )
+            .Where(card => filters?.ColorIdentity == null || card.ColorIdentity.Contains(filters?.ColorIdentity, StringComparison.CurrentCultureIgnoreCase))
+            // .Where(card => filters.CMC == null || card.CMC == filters.CMC)
+            // .Where(card => filters.TypeLine == null || card.TypeLine.Contains(filters.TypeLine, StringComparison.CurrentCultureIgnoreCase))
+            .Skip(reference)
+            .Take(pageSize)
+            .ToList();
+        
+        // var cards =  await cardRepository.GetCardsWithPagination(
+        //     reference, pageSize, filters);
+
+        var pagedResponse = new PagedResponseKeyset<Card>
+        (
+            cardsFiltered,
+            cardsFiltered.Any() ? cardsFiltered.Last().Id : 0
+        );
+        
+        return pagedResponse;
     }
 }

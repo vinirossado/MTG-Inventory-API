@@ -72,6 +72,7 @@ public class CardController(CardService cardService) : ControllerBase
         if (pageSize <= 0)
             return BadRequest($"{nameof(pageSize)} size must be greater than 0.");
 
+        
         CardFilterDto? filterDto = null;
         if (!string.IsNullOrEmpty(filters))
         {

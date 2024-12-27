@@ -1,6 +1,7 @@
 // MARK: - CardModel for Decoding
 
 import Foundation
+
 // MARK: - API Response Model
 struct ApiResponse: Codable {
     let reference: Int
@@ -38,47 +39,144 @@ struct ServerCard: Codable {
 // MARK: - Network Manager Singleton
 class NetworkManager {
     static let shared = NetworkManager()
-    
     private init() {}
     
-    func getCards(reference: Int, pageSize: Int, completion: @escaping (Result<[ServerCard], Error>) -> Void) {
-        guard let url = URL(string: "http://143.198.101.34:7770/api/Card/GetCardsWithPagination?reference=\(reference)&pageSize=\(pageSize)") else {
+    func requestLocalNetworkAccess() {
+        
+    }
+    
+    // Endpoint para busca por nome
+    func searchCards(
+        name: String,
+        isCommander: Bool,
+        colorIdentity: String,
+        completion: @escaping (Result<[ServerCard], Error>) -> Void
+    ) {
+        var components = URLComponents(
+            string: "http://192.168.1.216:5822/api/Card/GetCardsWithPagination"
+        )
+        
+        // Inicializar o array de queryItems
+        var queryItems = [
+            URLQueryItem(name: "reference", value: "1"),
+            URLQueryItem(name: "pageSize", value: "5000")
+        ]
+        
+        // Criar o filtro JSON
+        let filterDict = [
+            "name": name,
+            "isCommander": isCommander,
+            "color_identity": colorIdentity
+        ] as [String: Any]
+        
+        print("Search Fiter: \(filterDict)")
+        
+        if let jsonData = try? JSONSerialization.data(withJSONObject: filterDict),
+           let jsonString = String(data: jsonData, encoding: .utf8) {
+            // Adicionar o filtro aos queryItems existentes
+            queryItems.append(URLQueryItem(name: "filters", value: jsonString))
+        }
+        
+        // Atribuir todos os queryItems de uma vez
+        components?.queryItems = queryItems
+        
+        guard let url = components?.url else {
             completion(.failure(NSError(domain: "Invalid URL", code: 0, userInfo: nil)))
             return
         }
-        
-//        guard let url = URL(string: "http://localhost:5822/api/Card/GetCardsWithPagination?reference=\(reference)&pageSize=\(pageSize)") else {
-//            completion(.failure(NSError(domain: "Invalid URL", code: 0, userInfo: nil)))
-//            return
-//        }
-        
+
+        print("Search URL: \(url)")
+
         var request = URLRequest(url: url)
         request.httpMethod = "GET"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        request.timeoutInterval = 30 // Adjust timeout as needed
-        
+        request.timeoutInterval = 30
+
         URLSession.shared.dataTask(with: request) { data, response, error in
             if let error = error {
                 completion(.failure(error))
                 return
             }
-            
-            guard let httpResponse = response as? HTTPURLResponse, (200...299).contains(httpResponse.statusCode) else {
-                let statusError = NSError(domain: "HTTP Error", code: (response as? HTTPURLResponse)?.statusCode ?? 0, userInfo: nil)
+
+            guard let httpResponse = response as? HTTPURLResponse,
+                  (200...299).contains(httpResponse.statusCode) else {
+                let statusError = NSError(
+                    domain: "HTTP Error",
+                    code: (response as? HTTPURLResponse)?.statusCode ?? 0,
+                    userInfo: nil
+                )
                 completion(.failure(statusError))
                 return
             }
-            
+
             guard let data = data else {
                 completion(.failure(NSError(domain: "No data received", code: 0, userInfo: nil)))
                 return
             }
-            
+
             do {
                 let apiResponse = try JSONDecoder().decode(ApiResponse.self, from: data)
-//                print(apiResponse.data.first(where: <#T##(ServerCard) throws -> Bool#>))
                 completion(.success(apiResponse.data))
             } catch {
+                print("Decode error: \(error)") // Para debug
+                completion(.failure(error))
+            }
+        }.resume()
+    }
+    
+    func getCardsWithPagination(
+        reference: Int,
+        pageSize: Int,
+        completion: @escaping (Result<[ServerCard], Error>) -> Void
+    ) {
+        var components = URLComponents(
+            string: "http://192.168.1.216:5822/api/Card/GetCardsWithPagination"
+        )
+        
+        components?.queryItems = [
+            URLQueryItem(name: "reference", value: "\(reference)"),
+            URLQueryItem(name: "pageSize", value: "\(pageSize)")
+        ]
+        
+        guard let url = components?.url else {
+            completion(.failure(NSError(domain: "Invalid URL", code: 0, userInfo: nil)))
+            return
+        }
+        
+        print("Chamou essa porra")
+
+        var request = URLRequest(url: url)
+        request.httpMethod = "GET"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.timeoutInterval = 30
+
+        URLSession.shared.dataTask(with: request) { data, response, error in
+            if let error = error {
+                completion(.failure(error))
+                return
+            }
+
+            guard let httpResponse = response as? HTTPURLResponse,
+                  (200...299).contains(httpResponse.statusCode) else {
+                let statusError = NSError(
+                    domain: "HTTP Error",
+                    code: (response as? HTTPURLResponse)?.statusCode ?? 0,
+                    userInfo: nil
+                )
+                completion(.failure(statusError))
+                return
+            }
+
+            guard let data = data else {
+                completion(.failure(NSError(domain: "No data received", code: 0, userInfo: nil)))
+                return
+            }
+
+            do {
+                let apiResponse = try JSONDecoder().decode(ApiResponse.self, from: data)
+                completion(.success(apiResponse.data))
+            } catch {
+                print("Decode error: \(error)")
                 completion(.failure(error))
             }
         }.resume()

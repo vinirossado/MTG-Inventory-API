@@ -124,6 +124,10 @@ public class CardRepository(AppDbContext context)
             if (!string.IsNullOrWhiteSpace(filters?.TypeLine))
                 query = query.Where(card => card.TypeLine != null 
                                             && card.TypeLine.ToUpper() == filters.TypeLine.ToUpper());
+            
+            if (filters?.IsCommander != null)
+                query = query.Where(card => card.IsCommander != null 
+                                            && card.IsCommander == filters.IsCommander);
 
             if (filters.CMC.HasValue)
                 query = query.Where(card => card.CMC == filters.CMC.Value);

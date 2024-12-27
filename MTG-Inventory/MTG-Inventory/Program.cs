@@ -17,7 +17,8 @@ builder.Services.AddCors(options =>
         {
             builder.AllowAnyOrigin()
                 .AllowAnyHeader()
-                .AllowAnyMethod();
+                .AllowAnyMethod()
+                .SetPreflightMaxAge(TimeSpan.FromDays(1));
         });
 });
 

@@ -10,6 +10,9 @@ public class CardFilterDto
     [JsonPropertyName("name")]
     public string? Name { get; set; }
     
+    [JsonPropertyName("isCommander")]
+    public bool IsCommander { get; set; }
+    
     // [OpenApiSchema("Color Identity", 
     //     Enum = new[] { "W", "U", "B", "R", "G", "C", "M" })]
     [JsonPropertyName("color_identity")]
