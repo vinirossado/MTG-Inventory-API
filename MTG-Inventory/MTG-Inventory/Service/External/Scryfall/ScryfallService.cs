@@ -77,15 +77,35 @@ namespace MTG_Inventory.Service.External.Scryfall
         {
             if (deserializedCard.Data.Count <= 0) return;
 
-            var data = deserializedCard.Data[0];
-            card.CMC = data.Cmc;
-            card.TypeLine = data.TypeLine;
-            card.ColorIdentity = string.Join(",", data.ColorIdentity);
-            card.OracleId = data.Id;
-            card.ImageUri = data.ImageUris?.Large ?? data.CardFaces.FirstOrDefault()?.ImageUris.Large;
-            card.Price = data.Prices?.Eur;
-            card.Rarity = data.Rarity.ToUpper();
-            card.IsCommander = data.TypeLine.Contains("Legendary Creature") || data.TypeLine.Contains("Summon Legend");
+            MTG_Card_Checker.Repository.External.Scryfall.Model.Scryfall? data = null;
+            
+            var isDoubleFaceCard = deserializedCard.Data.Exists(x => x.Name.Contains(" // "));
+            if (isDoubleFaceCard)
+            {
+                data = deserializedCard.Data.FirstOrDefault(x => x.Name.Contains(card.Name, StringComparison.OrdinalIgnoreCase));
+            }
+            else
+            {
+                data = deserializedCard.Data.FirstOrDefault(x => x.Name.Equals(card.Name, StringComparison.OrdinalIgnoreCase));
+            }
+            
+            if (data is not null)
+            {
+                card.CMC = data.Cmc;
+                card.Name = data.Name.ToLowerInvariant();
+                card.TypeLine = data.TypeLine;
+                card.ColorIdentity = string.Join(",", data.ColorIdentity);
+                card.OracleId = data.Id;
+                card.ImageUri = data.ImageUris?.Large ?? data.CardFaces.FirstOrDefault()?.ImageUris.Large;
+                card.Price = data.Prices?.Eur;
+                card.Rarity = data.Rarity.ToUpper();
+
+                card.IsCommander = data.TypeLine.Contains("Legendary Creature") || data.TypeLine.Contains("Summon Legend");
+            }
+            else
+            {
+                failedCards.Add(card.Name);
+            }
         }
 
         private static async Task<string?> GetScryfallDataWithRetryAsync(string url, int maxRetries = 3, int delayBetweenRetriesMs = 1000)

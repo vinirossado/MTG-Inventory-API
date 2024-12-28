@@ -1,8 +1,4 @@
-using System.Globalization;
 using System.Text.RegularExpressions;
-using CsvHelper;
-using CsvHelper.Configuration;
-using Mapster;
 using Microsoft.Extensions.Caching.Memory;
 using MTG_Inventory.Dtos;
 using MTG_Inventory.Helpers;
@@ -12,7 +8,7 @@ using MTG_Inventory.Service.External.Scryfall;
 
 namespace MTG_Inventory.Service;
 
-public class CardService(CardRepository cardRepository, ScryfallService scryfallService, IMemoryCache memoryCache)
+public partial class CardService(CardRepository cardRepository, ScryfallService scryfallService, IMemoryCache memoryCache)
 {
     private const string CacheKey = "AllCardsCache";
 
@@ -24,6 +20,7 @@ public class CardService(CardRepository cardRepository, ScryfallService scryfall
 
         await scryfallService.GetCard(missingCardsToImport);
 
+        await cardRepository.CardsToBeRemovedFromDb(cards);
         await SetCommander(missingCardsToImport);
         await cardRepository.Add(missingCardsToImport);
 
@@ -36,7 +33,7 @@ public class CardService(CardRepository cardRepository, ScryfallService scryfall
         {
             if (card.TypeLine == null) continue;
 
-            card.IsCommander = Regex.IsMatch(card.TypeLine, @"Legendary\s*Creature|Summon\s*Legend", RegexOptions.IgnoreCase);
+            card.IsCommander = MyRegex().IsMatch(card.TypeLine);
         }
 
         return Task.CompletedTask;
@@ -99,7 +96,6 @@ public class CardService(CardRepository cardRepository, ScryfallService scryfall
     public async Task<PagedResponseKeyset<Card>> GetCardsWithPagination(
         int reference, int pageSize, CardFilterDto filters)
     {
-
         var allCards = await GetCardsFromCache();
         if(allCards.Count <= 0)
         {
@@ -107,14 +103,29 @@ public class CardService(CardRepository cardRepository, ScryfallService scryfall
             memoryCache.Set(CacheKey, allCards);
         }
         
+        if(filters?.IsCommander is false)
+        {
+            filters.IsCommander = null;
+        }
+
+        if (filters?.ColorIdentity == "")
+        {
+            filters.ColorIdentity = null;
+        }
+        
+        if (filters?.ColorIdentity == "Colorless")
+        {
+            filters.ColorIdentity = "";
+        }
+        
         var cardsFiltered = allCards
-            .Where(card => filters?.Name == null || card.Name.Contains(filters?.Name, StringComparison.CurrentCultureIgnoreCase))
+            .Where(card => filters?.Name == null || card.Name.Contains(filters?.Name.TrimEnd() ?? string.Empty, StringComparison.CurrentCultureIgnoreCase))
             .Where(card => filters?.IsCommander == null || card.IsCommander == filters?.IsCommander )
             .Where(card => filters?.ColorIdentity == null || card.ColorIdentity.Contains(filters?.ColorIdentity, StringComparison.CurrentCultureIgnoreCase))
             // .Where(card => filters.CMC == null || card.CMC == filters.CMC)
             // .Where(card => filters.TypeLine == null || card.TypeLine.Contains(filters.TypeLine, StringComparison.CurrentCultureIgnoreCase))
-            .Skip(reference)
-            .Take(pageSize)
+            // .Skip(reference)
+            // .Take(pageSize)
             .ToList();
         
         // var cards =  await cardRepository.GetCardsWithPagination(
@@ -128,4 +139,7 @@ public class CardService(CardRepository cardRepository, ScryfallService scryfall
         
         return pagedResponse;
     }
+
+    [GeneratedRegex(@"Legendary\s*Creature|Summon\s*Legend", RegexOptions.IgnoreCase, "en-EE")]
+    private static partial Regex MyRegex();
 }

@@ -85,7 +85,7 @@ public class CardRepository(AppDbContext context)
             .ToListAsync();
     
         var extraCards = cards.Where(x => !allCardsInDatabase.Any(dbCard =>
-            dbCard.Name.Equals(x.Name.Trim(), StringComparison.CurrentCultureIgnoreCase) &&
+            dbCard.Name.Equals(x.Name.Replace(",", "").Trim(), StringComparison.CurrentCultureIgnoreCase) &&
             dbCard.ExpansionName == x.ExpansionName?.Trim().ToUpper() &&
             dbCard.Quantity == x.Quantity
         )).ToList();
@@ -93,6 +93,30 @@ public class CardRepository(AppDbContext context)
         Console.WriteLine($"Total no banco: {allCardsInDatabase.Count}, Não na lista: {extraCards.Count}");
     
         return extraCards;
+    }
+    
+    public async Task CardsToBeRemovedFromDb(IList<Card> cards)
+    {
+        var allCardsInDatabase = await context.Card
+            .Select(dbCard => new Card
+            {
+                Id = dbCard.Id,
+                Name = dbCard.Name.Trim().ToUpper(),
+                Quantity = dbCard.Quantity,
+                ExpansionName = dbCard.ExpansionName!.Trim().ToUpper()
+            })
+            .ToListAsync();
+    
+        var cardsToBeRemoved = allCardsInDatabase.Where(dbCard => !cards.Any(x =>
+            dbCard.Name.ToLowerInvariant().Equals(x.Name.ToLowerInvariant().Trim(), StringComparison.CurrentCultureIgnoreCase) &&
+            dbCard.ExpansionName?.ToUpper() == x.ExpansionName?.Trim().ToUpper() &&
+            dbCard.Quantity == x.Quantity
+        )).ToList();
+    
+        Console.WriteLine($"Total no banco: {allCardsInDatabase.Count}, Removidos: {cardsToBeRemoved.Count}");
+    
+        context.Card.RemoveRange(cardsToBeRemoved);
+        await context.SaveChangesAsync();
     }
     
     public async Task Update(Card card)
