@@ -40,48 +40,53 @@ struct ServerCard: Codable {
 class NetworkManager {
     static let shared = NetworkManager()
     private init() {}
-    
+
     func requestLocalNetworkAccess() {
-        
+
     }
-    
+
     // Endpoint para busca por nome
     func searchCards(
         name: String,
         isCommander: Bool,
-        colorIdentity: String,
+        colorIdentity: String? = nil,
         completion: @escaping (Result<[ServerCard], Error>) -> Void
     ) {
         var components = URLComponents(
             string: "http://192.168.1.216:5822/api/Card/GetCardsWithPagination"
         )
-        
+
         // Inicializar o array de queryItems
         var queryItems = [
             URLQueryItem(name: "reference", value: "1"),
-            URLQueryItem(name: "pageSize", value: "5000")
+            URLQueryItem(name: "pageSize", value: "10000"),
         ]
-        
+
         // Criar o filtro JSON
-        let filterDict = [
-            "name": name,
-            "isCommander": isCommander,
-            "color_identity": colorIdentity
-        ] as [String: Any]
-        
+        let filterDict =
+            [
+                "name": name,
+                "isCommander": isCommander,
+                "color_identity": colorIdentity,
+            ] as [String: Any]
+
         print("Search Fiter: \(filterDict)")
-        
-        if let jsonData = try? JSONSerialization.data(withJSONObject: filterDict),
-           let jsonString = String(data: jsonData, encoding: .utf8) {
+
+        if let jsonData = try? JSONSerialization.data( 
+            withJSONObject: filterDict),
+            let jsonString = String(data: jsonData, encoding: .utf8)
+        {
             // Adicionar o filtro aos queryItems existentes
             queryItems.append(URLQueryItem(name: "filters", value: jsonString))
         }
-        
+
         // Atribuir todos os queryItems de uma vez
         components?.queryItems = queryItems
-        
+
         guard let url = components?.url else {
-            completion(.failure(NSError(domain: "Invalid URL", code: 0, userInfo: nil)))
+            completion(
+                .failure(NSError(domain: "Invalid URL", code: 0, userInfo: nil))
+            )
             return
         }
 
@@ -99,7 +104,8 @@ class NetworkManager {
             }
 
             guard let httpResponse = response as? HTTPURLResponse,
-                  (200...299).contains(httpResponse.statusCode) else {
+                (200...299).contains(httpResponse.statusCode)
+            else {
                 let statusError = NSError(
                     domain: "HTTP Error",
                     code: (response as? HTTPURLResponse)?.statusCode ?? 0,
@@ -110,20 +116,25 @@ class NetworkManager {
             }
 
             guard let data = data else {
-                completion(.failure(NSError(domain: "No data received", code: 0, userInfo: nil)))
+                completion(
+                    .failure(
+                        NSError(
+                            domain: "No data received", code: 0, userInfo: nil))
+                )
                 return
             }
 
             do {
-                let apiResponse = try JSONDecoder().decode(ApiResponse.self, from: data)
+                let apiResponse = try JSONDecoder().decode(
+                    ApiResponse.self, from: data)
                 completion(.success(apiResponse.data))
             } catch {
-                print("Decode error: \(error)") // Para debug
+                print("Decode error: \(error)")  // Para debug
                 completion(.failure(error))
             }
         }.resume()
     }
-    
+
     func getCardsWithPagination(
         reference: Int,
         pageSize: Int,
@@ -132,17 +143,19 @@ class NetworkManager {
         var components = URLComponents(
             string: "http://192.168.1.216:5822/api/Card/GetCardsWithPagination"
         )
-        
+
         components?.queryItems = [
             URLQueryItem(name: "reference", value: "\(reference)"),
-            URLQueryItem(name: "pageSize", value: "\(pageSize)")
+            URLQueryItem(name: "pageSize", value: "\(pageSize)"),
         ]
-        
+
         guard let url = components?.url else {
-            completion(.failure(NSError(domain: "Invalid URL", code: 0, userInfo: nil)))
+            completion(
+                .failure(NSError(domain: "Invalid URL", code: 0, userInfo: nil))
+            )
             return
         }
-        
+
         print("Chamou essa porra")
 
         var request = URLRequest(url: url)
@@ -157,7 +170,8 @@ class NetworkManager {
             }
 
             guard let httpResponse = response as? HTTPURLResponse,
-                  (200...299).contains(httpResponse.statusCode) else {
+                (200...299).contains(httpResponse.statusCode)
+            else {
                 let statusError = NSError(
                     domain: "HTTP Error",
                     code: (response as? HTTPURLResponse)?.statusCode ?? 0,
@@ -168,12 +182,17 @@ class NetworkManager {
             }
 
             guard let data = data else {
-                completion(.failure(NSError(domain: "No data received", code: 0, userInfo: nil)))
+                completion(
+                    .failure(
+                        NSError(
+                            domain: "No data received", code: 0, userInfo: nil))
+                )
                 return
             }
 
             do {
-                let apiResponse = try JSONDecoder().decode(ApiResponse.self, from: data)
+                let apiResponse = try JSONDecoder().decode(
+                    ApiResponse.self, from: data)
                 completion(.success(apiResponse.data))
             } catch {
                 print("Decode error: \(error)")

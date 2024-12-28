@@ -26,8 +26,8 @@ class CardViewModel: ObservableObject {
     // MARK: - Filter State
     struct FilterState {
         var searchQuery = ""
-        var isCommander = false
-        var colorIdentity: String = ""
+        var isCommander : Bool = false
+        var colorIdentity: String? = ""
         // Adicione outros filtros aqui
     }
 
@@ -66,7 +66,7 @@ class CardViewModel: ObservableObject {
 
     private func applyFilters() {
         if filterState.searchQuery.isEmpty && !filterState.isCommander
-            && filterState.colorIdentity.isEmpty
+            && filterState.colorIdentity == nil
         {
             fetchAllCards()
         } else {
@@ -84,7 +84,7 @@ class CardViewModel: ObservableObject {
         isLoading = true
 
         NetworkManager.shared.getCardsWithPagination(
-            reference: 1, pageSize: 5000
+            reference: 1, pageSize: 10000
         ) { [weak self] result in
             DispatchQueue.main.async {
                 guard let self = self else { return }
@@ -93,7 +93,7 @@ class CardViewModel: ObservableObject {
         }
     }
 
-    func searchCards(query: String, isCommander: Bool, colorIdentity: String) {
+    func searchCards(query: String, isCommander: Bool, colorIdentity: String? = nil) {
         guard !isLoading else { return }
         isLoading = true
 
