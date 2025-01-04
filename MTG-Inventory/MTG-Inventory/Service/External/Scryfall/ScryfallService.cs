@@ -77,14 +77,12 @@ namespace MTG_Inventory.Service.External.Scryfall
         {
             if (deserializedCard.Data.Count <= 0) return;
 
-            MTG_Card_Checker.Repository.External.Scryfall.Model.Scryfall? data = null;
+            // MTG_Card_Checker.Repository.External.Scryfall.Model.Scryfall? data = null;
+           
+            var data = deserializedCard.Data.FirstOrDefault(x => x.Name.Contains($"{card.Name} // ")) ??
+                       deserializedCard.Data.FirstOrDefault(x => x.Name.Contains($" // {card.Name}"));
             
-            var isDoubleFaceCard = deserializedCard.Data.Exists(x => x.Name.Contains(" // "));
-            if (isDoubleFaceCard)
-            {
-                data = deserializedCard.Data.FirstOrDefault(x => x.Name.Contains(card.Name, StringComparison.OrdinalIgnoreCase));
-            }
-            else
+            if(data is null)
             {
                 data = deserializedCard.Data.FirstOrDefault(x => x.Name.Equals(card.Name, StringComparison.OrdinalIgnoreCase));
             }

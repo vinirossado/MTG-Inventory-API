@@ -59,6 +59,12 @@ public class CardRepository(AppDbContext context)
 
         return missingCards;
     }
+
+    public async void Remove(IList<Card> cards)
+    {
+        context.Card.RemoveRange(cards);
+        await context.SaveChangesAsync();
+    }
     
     public List<FilteredCard> GetFoundCards(IList<Card> cardsFromFile, IList<Card> allCardsInDb)
     {
@@ -77,22 +83,78 @@ public class CardRepository(AppDbContext context)
         var allCardsInDatabase = await context.Card
             .Select(dbCard => new Card
             {
-                Id = dbCard.Id,
-                Name = dbCard.Name.Trim().ToUpper(),
-                Quantity = dbCard.Quantity,
-                ExpansionName = dbCard.ExpansionName!.Trim().ToUpper()
+                Name = dbCard.Name.ToLowerInvariant(),
+                CardNumber = dbCard.CardNumber
             })
             .ToListAsync();
+
+        List<Card> missingCards = [];
+
+        var dbCardLookup = allCardsInDatabase
+            .GroupBy(card => new { card?.Name})
+            .ToDictionary(group => group.Key, group => group.Sum(card => card.Quantity));
+        
+        foreach (var card in cards)
+        {
+            var cardKey = new
+            {
+                Name = card.Name.ToLowerInvariant(),
+            };
+
+            // Check for exact match
+            if (!dbCardLookup.ContainsKey(cardKey))
+            {
+                missingCards.Add(card);
+            }
+            else
+            {
+                dbCardLookup[cardKey] += card.Quantity;
+            }
+        }
+
+        foreach (var card in cards)
+        {
+            if (!missingCards.Contains(card) && // Avoid adding duplicates
+                !allCardsInDatabase.Any(dbCard =>
+                    (dbCard.Name.Contains($"{card.Name} // ", StringComparison.CurrentCultureIgnoreCase) ||
+                     dbCard.Name.Contains($" // {card.Name}", StringComparison.CurrentCultureIgnoreCase)) &&
+                    dbCard.Quantity == card.Quantity))
+            {
+                missingCards.Add(card);
+            }
+        }
+
+        Console.WriteLine($"Total no banco: {allCardsInDatabase.Count}, Não na lista: {missingCards.Count}");
     
-        var extraCards = cards.Where(x => !allCardsInDatabase.Any(dbCard =>
-            dbCard.Name.Equals(x.Name.Replace(",", "").Trim(), StringComparison.CurrentCultureIgnoreCase) &&
-            dbCard.ExpansionName == x.ExpansionName?.Trim().ToUpper() &&
-            dbCard.Quantity == x.Quantity
-        )).ToList();
-    
-        Console.WriteLine($"Total no banco: {allCardsInDatabase.Count}, Não na lista: {extraCards.Count}");
-    
-        return extraCards;
+        return missingCards;
+    }
+
+    public async Task<IList<Card>> DuplicatedCardsToBeRemoved()
+    {
+        var duplicateGroups = await context.Card
+            .GroupBy(card => new
+            {
+                card.Name,
+                card.Language,
+                card.ExpansionName,
+                card.CardNumber,
+                card.Quantity,
+                card.Foil
+            })
+            .Where(group => group.Count() > 1) // Filter duplicate groups
+            .Select(group => new
+            {
+                Key = group.Key,
+                Duplicates = group.Skip(1).ToList() // Skip(1) will not be translated, workaround needed
+            })
+            .ToListAsync();
+
+        // Flatten the list to get all duplicate cards
+        var duplicatedCards = duplicateGroups
+            .SelectMany(group => group.Duplicates)
+            .ToList();
+
+        return duplicatedCards;
     }
     
     public async Task CardsToBeRemovedFromDb(IList<Card> cards)
@@ -108,7 +170,7 @@ public class CardRepository(AppDbContext context)
             .ToListAsync();
     
         var cardsToBeRemoved = allCardsInDatabase.Where(dbCard => !cards.Any(x =>
-            dbCard.Name.ToLowerInvariant().Equals(x.Name.ToLowerInvariant().Trim(), StringComparison.CurrentCultureIgnoreCase) &&
+            dbCard.Name.ToLowerInvariant().Trim().Equals(x.Name.ToLowerInvariant().Trim(), StringComparison.CurrentCultureIgnoreCase) &&
             dbCard.ExpansionName?.ToUpper() == x.ExpansionName?.Trim().ToUpper() &&
             dbCard.Quantity == x.Quantity
         )).ToList();

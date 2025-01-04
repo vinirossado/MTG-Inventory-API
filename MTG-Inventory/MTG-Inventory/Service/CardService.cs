@@ -14,6 +14,9 @@ public partial class CardService(CardRepository cardRepository, ScryfallService 
 
     public async Task ImportDatabase(IFormFile file)
     {
+        var duplicatedCardsToBeRemoved = await cardRepository.DuplicatedCardsToBeRemoved();
+        if(duplicatedCardsToBeRemoved.Count > 0)
+            cardRepository.Remove(duplicatedCardsToBeRemoved);
         var cards = await FileHelper.ReadCardsFromCsv(file);
 
         var missingCardsToImport = await cardRepository.GetMissingCardsToImport(cards);
