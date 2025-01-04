@@ -25,6 +25,7 @@ struct CardGridView: View {
             VStack(spacing: spacing) {
                 HeaderView(title: "Digital Binder")
                 SearchBarView(viewModel: viewModel)
+                    .padding(.bottom, 15)
 
                 CardGridContent(
                     gridItems: gridItems,

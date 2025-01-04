@@ -53,7 +53,7 @@ class NetworkManager {
         completion: @escaping (Result<[ServerCard], Error>) -> Void
     ) {
         var components = URLComponents(
-            string: "http://192.168.1.216:5822/api/Card/GetCardsWithPagination"
+            string: "http://143.198.101.34:7770/api/Card/GetCardsWithPagination"
         )
 
         // Inicializar o array de queryItems
@@ -141,7 +141,7 @@ class NetworkManager {
         completion: @escaping (Result<[ServerCard], Error>) -> Void
     ) {
         var components = URLComponents(
-            string: "http://192.168.1.216:5822/api/Card/GetCardsWithPagination"
+            string: "http://143.198.101.34:7770/api/Card/GetCardsWithPagination"
         )
 
         components?.queryItems = [

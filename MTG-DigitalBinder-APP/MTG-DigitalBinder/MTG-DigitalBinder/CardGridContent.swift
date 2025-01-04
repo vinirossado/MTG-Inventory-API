@@ -14,18 +14,21 @@ struct CardGridContent: View {
     let isLoading: Bool
 
     var body: some View {
-        ScrollView {
-            LazyVGrid(columns: gridItems, spacing: spacing) {
-                ForEach(cards) { card in
-                    CardGridItem(card: card)
+        ScrollViewReader { proxy in
+            ScrollView {
+                LazyVGrid(columns: gridItems, spacing: spacing) {
+                    ForEach(cards) { card in
+                        CardGridItem(card: card)
+                    }
+                }
+                .padding(.horizontal, spacing)
+
+                if isLoading {
+                    ProgressView()
+                        .padding(.top)
                 }
             }
-            .padding(.horizontal, spacing)
-
-            if isLoading {
-                ProgressView()
-                    .padding(.top)
-            }
+            .ignoresSafeArea(.keyboard)
         }
     }
 }
