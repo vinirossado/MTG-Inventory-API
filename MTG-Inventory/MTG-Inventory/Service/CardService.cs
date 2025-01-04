@@ -121,7 +121,7 @@ public partial class CardService(CardRepository cardRepository, ScryfallService 
         var cardsFiltered = allCards
             .Where(card => filters?.Name == null || card.Name.Contains(filters?.Name.TrimEnd() ?? string.Empty, StringComparison.CurrentCultureIgnoreCase))
             .Where(card => filters?.IsCommander == null || card.IsCommander == filters?.IsCommander )
-            .Where(card => filters?.ColorIdentity == null || card.ColorIdentity.Contains(filters?.ColorIdentity, StringComparison.CurrentCultureIgnoreCase))
+            .Where(card => filters?.ColorIdentity == null || card.ColorIdentity!.Equals(filters?.ColorIdentity, StringComparison.CurrentCultureIgnoreCase))
             // .Where(card => filters.CMC == null || card.CMC == filters.CMC)
             // .Where(card => filters.TypeLine == null || card.TypeLine.Contains(filters.TypeLine, StringComparison.CurrentCultureIgnoreCase))
             // .Skip(reference)
