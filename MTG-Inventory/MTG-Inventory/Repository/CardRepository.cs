@@ -34,7 +34,7 @@ public class CardRepository(AppDbContext context)
         if (cardsFromFile == null) return [];
 
         var missingCards = cardsFromFile
-            .Where(card => allCardsInDb.All(dbCard => dbCard.Name != card.Name))
+            .Where(card => allCardsInDb.All(dbCard => dbCard.Name.ToLower() != card.Name.ToLower()))
             .Select(card => new FilteredCard
             {
                 Name = card.Name,
@@ -63,7 +63,7 @@ public class CardRepository(AppDbContext context)
     public List<FilteredCard> GetFoundCards(IList<Card> cardsFromFile, IList<Card> allCardsInDb)
     {
         return cardsFromFile
-            .Where(card => allCardsInDb.Any(dbCard => dbCard.Name == card.Name && card.Quantity <= dbCard.Quantity - dbCard.InUse))
+            .Where(card => allCardsInDb.Any(dbCard => dbCard.Name.ToLower() == card.Name.ToLower() && card.Quantity <= dbCard.Quantity - dbCard.InUse))
             .Select(card => new FilteredCard
             {
                 Name = card.Name,

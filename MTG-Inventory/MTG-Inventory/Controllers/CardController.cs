@@ -1,10 +1,12 @@
 using System.ComponentModel.DataAnnotations;
+using System.Text;
 using System.Text.Json;
 using Mapster;
 using Microsoft.AspNetCore.Mvc;
 using MTG_Inventory.Dtos;
 using MTG_Inventory.Models;
 using MTG_Inventory.Service;
+
 
 namespace MTG_Inventory.Controllers;
 
@@ -49,12 +51,27 @@ public class CardController(CardService cardService) : ControllerBase
         var response = new WantListResponse
         {
             FoundCards = foundCards,
-            MissingCards = missingCards
+            MissingCards = missingCards,
+            MissingCardsFileUrl = GenerateMissingCardsFile(missingCards)
         };
 
         return Ok(response);
     }
 
+    private static string GenerateMissingCardsFile(List<FilteredCard> missingCards)
+    {
+        var sb = new StringBuilder();
+        foreach (var missingCard in missingCards)
+        {
+            sb.AppendLine($"{missingCard.Quantity} {missingCard.Name}");
+        }
+
+        var fileName = Path.Combine(Path.GetTempPath(), "missing-cards.txt");
+        System.IO.File.WriteAllText(fileName, sb.ToString());
+
+        return fileName;
+    }
+    
     [HttpGet("/sync")]
     public async Task<IActionResult> Sync()
     {

@@ -38,4 +38,5 @@ public class WantListResponse
     public List<FilteredCard> FoundCards { get; set; } = [];
     public int CardsMissing => MissingCards.Count;
     public List<FilteredCard> MissingCards { get; set; } = [];
+    public string MissingCardsFileUrl { get; set; }
 }
