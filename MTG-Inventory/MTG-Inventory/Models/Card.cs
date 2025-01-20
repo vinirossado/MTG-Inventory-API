@@ -30,6 +30,8 @@ public class FilteredCard
 {
     public string Name { get; set; }
     public int Quantity { get; set; }
+    public double? CMC { get; set; }
+    public string? ColorIdentity { get; set; }
 }
 
 public class WantListResponse

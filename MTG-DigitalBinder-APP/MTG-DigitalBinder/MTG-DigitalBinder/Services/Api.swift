@@ -53,13 +53,13 @@ class NetworkManager {
         completion: @escaping (Result<[ServerCard], Error>) -> Void
     ) {
         var components = URLComponents(
-            string: "http://143.198.101.34:7770/api/Card/GetCardsWithPagination"
+            string: "http://192.168.1.216:5822/api/Card/GetCardsWithPagination"
         )
 
         // Inicializar o array de queryItems
         var queryItems = [
-            URLQueryItem(name: "reference", value: "1"),
-            URLQueryItem(name: "pageSize", value: "10000"),
+            URLQueryItem(name: "reference", value: "0"),
+            URLQueryItem(name: "pageSize", value: "10"),
         ]
 
         // Criar o filtro JSON
@@ -140,10 +140,13 @@ class NetworkManager {
         pageSize: Int,
         completion: @escaping (Result<[ServerCard], Error>) -> Void
     ) {
-        var components = URLComponents(
-            string: "http://143.198.101.34:7770/api/Card/GetCardsWithPagination"
-        )
+//        var components = URLComponents(
+//            string: "http://143.198.101.34:7770/api/Card/GetCardsWithPagination"
+//        )
 
+        var components = URLComponents(
+            string: "http://192.168.1.216:5822/api/Card/GetCardsWithPagination"
+        )
         components?.queryItems = [
             URLQueryItem(name: "reference", value: "\(reference)"),
             URLQueryItem(name: "pageSize", value: "\(pageSize)"),

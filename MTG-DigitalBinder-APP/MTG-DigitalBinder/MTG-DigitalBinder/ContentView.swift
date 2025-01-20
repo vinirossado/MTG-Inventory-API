@@ -84,7 +84,7 @@ class CardViewModel: ObservableObject {
         isLoading = true
 
         NetworkManager.shared.getCardsWithPagination(
-            reference: 1, pageSize: 10000
+            reference: 0, pageSize: 50
         ) { [weak self] result in
             DispatchQueue.main.async {
                 guard let self = self else { return }

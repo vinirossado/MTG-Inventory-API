@@ -1,3 +1,4 @@
+using System.Text.Json;
 using System.Text.RegularExpressions;
 using Microsoft.Extensions.Caching.Memory;
 using MTG_Inventory.Dtos;
@@ -96,12 +97,18 @@ public partial class CardService(CardRepository cardRepository, ScryfallService 
     public async Task<PagedResponseKeyset<Card>> GetCardsWithPagination(
         int reference, int pageSize, CardFilterDto filters)
     {
-        var allCards = await GetCardsFromCache();
-        if(allCards.Count <= 0)
+        var filtersJson = JsonSerializer.Serialize(filters);
+        var filtersHash = GerarHash(filtersJson);
+        var cacheKey = $"Cards:Reference:{reference}:PageSize:{pageSize}:Filters:{filtersHash}";
+        
+        if(memoryCache.TryGetValue(cacheKey, out List<Card> cachedCards))
         {
-            allCards = await cardRepository.Get();
-            memoryCache.Set(CacheKey, allCards);
+            return CreatePaginatedResponse(cachedCards, pageSize);
         }
+
+        var allCards = await cardRepository.Get();
+        
+        memoryCache.Set(CacheKey, allCards);
         
         if(filters?.IsCommander is false)
         {
@@ -117,29 +124,40 @@ public partial class CardService(CardRepository cardRepository, ScryfallService 
         {
             filters.ColorIdentity = "";
         }
-        
+
         var cardsFiltered = allCards
             .Where(card => filters?.Name == null || card.Name.Contains(filters?.Name.TrimEnd() ?? string.Empty, StringComparison.CurrentCultureIgnoreCase))
-            .Where(card => filters?.IsCommander == null || card.IsCommander == filters?.IsCommander )
-            .Where(card => filters?.ColorIdentity == null || card.ColorIdentity!.Equals(filters?.ColorIdentity, StringComparison.CurrentCultureIgnoreCase))
+            .Where(card => filters?.IsCommander == null || card.IsCommander == filters?.IsCommander)
+            .Where(card => filters?.ColorIdentity == null || card.ColorIdentity!.Equals(filters?.ColorIdentity, StringComparison.CurrentCultureIgnoreCase));
             // .Where(card => filters.CMC == null || card.CMC == filters.CMC)
-            // .Where(card => filters.TypeLine == null || card.TypeLine.Contains(filters.TypeLine, StringComparison.CurrentCultureIgnoreCase))
+            //.Where(card => filters.TypeLine == null || card.TypeLine.Contains(filters.TypeLine, StringComparison.CurrentCultureIgnoreCase))
             // .Skip(reference)
             // .Take(pageSize)
-            .ToList();
-        
-        // var cards =  await cardRepository.GetCardsWithPagination(
-        //     reference, pageSize, filters);
+          
 
-        var pagedResponse = new PagedResponseKeyset<Card>
-        (
-            cardsFiltered,
-            cardsFiltered.Any() ? cardsFiltered.Last().Id : 0
-        );
+        var paginatedCards = cardsFiltered.Skip(reference).Take(pageSize).ToList();
+
+        memoryCache.Set(cacheKey, paginatedCards);
         
-        return pagedResponse;
+        return CreatePaginatedResponse(paginatedCards, pageSize);
+    }
+    
+    private PagedResponseKeyset<Card> CreatePaginatedResponse(List<Card> cards, int pageSize)
+    {
+       return new PagedResponseKeyset<Card>
+       (
+           cards,
+           cards.Any() ? cards.Last().Id : 0
+       );
     }
 
     [GeneratedRegex(@"Legendary\s*Creature|Summon\s*Legend", RegexOptions.IgnoreCase, "en-EE")]
     private static partial Regex MyRegex();
+
+    private string GerarHash(string input)
+    {
+        using var sha256 = System.Security.Cryptography.SHA256.Create();
+        var hashBytes = sha256.ComputeHash(System.Text.Encoding.UTF8.GetBytes(input));
+        return Convert.ToBase64String(hashBytes);
+    }
 }

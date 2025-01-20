@@ -63,12 +63,18 @@ public class CardRepository(AppDbContext context)
     public List<FilteredCard> GetFoundCards(IList<Card> cardsFromFile, IList<Card> allCardsInDb)
     {
         return cardsFromFile
-            .Where(card => allCardsInDb.Any(dbCard => dbCard.Name.ToLower() == card.Name.ToLower() && card.Quantity <= dbCard.Quantity - dbCard.InUse))
-            .Select(card => new FilteredCard
-            {
-                Name = card.Name,
-                Quantity = card.Quantity
-            }).OrderBy(x => x.Name)
+            .Where(card => allCardsInDb.Any(dbCard => string.Equals(dbCard.Name, card.Name, StringComparison.CurrentCultureIgnoreCase) && card.Quantity <= dbCard.Quantity - dbCard.InUse))
+            .Select(card =>
+                {
+                    var dbCard = allCardsInDb.First(dbCard => string.Equals(dbCard.Name, card.Name, StringComparison.CurrentCultureIgnoreCase));
+                    return new FilteredCard
+                    {
+                        Name = card.Name,
+                        Quantity = card.Quantity,
+                        CMC = dbCard.CMC,
+                        ColorIdentity = dbCard.ColorIdentity,
+                    };
+                }).OrderBy(x => x.Name)
             .ToList();
     }
     

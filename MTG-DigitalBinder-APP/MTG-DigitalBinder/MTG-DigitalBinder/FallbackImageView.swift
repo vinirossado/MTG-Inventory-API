@@ -13,7 +13,7 @@ struct FallbackImageView: View {
             .resizable()
             .scaledToFit()
             .frame(height: 300)
-            .foregroundColor(.gray)
+            .foregroundColor(.red)
             .background(Color.gray.opacity(0.3))
             .cornerRadius(10)
     }
