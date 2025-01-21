@@ -1,5 +1,6 @@
 using System.Text.Json.Serialization;
 using Delta;
+using Microsoft.AspNetCore.Server.Kestrel.Core;
 using Microsoft.EntityFrameworkCore;
 using MTG_Inventory;
 using MTG_Inventory.Mapping;
@@ -9,6 +10,15 @@ using MTG_Inventory.Service.External.Scryfall;
 using Scalar.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(args);
+
+// builder.WebHost.ConfigureKestrel(options =>
+// {
+//     options.ListenAnyIP(5822, listenOptions =>
+//     {
+//         listenOptions.UseHttps();
+//         listenOptions.Protocols = HttpProtocols.Http1AndHttp2AndHttp3;
+//     });
+// });
 
 builder.Services.AddCors(options =>
 {

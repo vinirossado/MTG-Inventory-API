@@ -51,7 +51,6 @@ class CardViewModel: ObservableObject {
         .sink { [weak self] (query, isCommander, colorIdentity, _) in
             guard let self = self else { return }
 
-            print(colorIdentity)
             self.filterState = FilterState(
                 searchQuery: query,
                 isCommander: isCommander,
@@ -84,7 +83,7 @@ class CardViewModel: ObservableObject {
         isLoading = true
 
         NetworkManager.shared.getCardsWithPagination(
-            reference: 0, pageSize: 50
+            reference: 1, pageSize: 50
         ) { [weak self] result in
             DispatchQueue.main.async {
                 guard let self = self else { return }

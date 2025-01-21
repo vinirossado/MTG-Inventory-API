@@ -82,7 +82,25 @@ public partial class CardService(CardRepository cardRepository, ScryfallService 
     {
         if (memoryCache.TryGetValue(CacheKey, out IList<Card> cachedCards)) return cachedCards;
 
-        cachedCards = await cardRepository.Get();
+        var allCardsInDatabase = await cardRepository.Get();
+
+        var uniqueCards = new Dictionary<string, Card>();
+
+        foreach (var card in allCardsInDatabase)
+        {
+            var key = card.Name.ToLowerInvariant();
+
+            if (uniqueCards.ContainsKey(key))
+            {
+                uniqueCards[key].Quantity += card.Quantity;
+            }
+            else
+            {
+                uniqueCards[key] = card;
+            }
+        }
+
+        cachedCards = uniqueCards.Values.ToList();
         memoryCache.Set(CacheKey, cachedCards);
 
         return cachedCards;
@@ -93,24 +111,24 @@ public partial class CardService(CardRepository cardRepository, ScryfallService 
         var updatedCards = await cardRepository.Get();
         memoryCache.Set(CacheKey, updatedCards);
     }
-    
+
     public async Task<PagedResponseKeyset<Card>> GetCardsWithPagination(
         int reference, int pageSize, CardFilterDto filters)
     {
         var filtersJson = JsonSerializer.Serialize(filters);
         var filtersHash = GerarHash(filtersJson);
         var cacheKey = $"Cards:Reference:{reference}:PageSize:{pageSize}:Filters:{filtersHash}";
-        
-        if(memoryCache.TryGetValue(cacheKey, out List<Card> cachedCards))
+
+        if (memoryCache.TryGetValue(cacheKey, out List<Card> cachedCards))
         {
-            return CreatePaginatedResponse(cachedCards, pageSize);
+            return CreatePaginatedResponse(cachedCards);
         }
 
-        var allCards = await cardRepository.Get();
-        
+        var allCards = await GetCardsFromCache();
+
         memoryCache.Set(CacheKey, allCards);
-        
-        if(filters?.IsCommander is false)
+
+        if (filters?.IsCommander is false)
         {
             filters.IsCommander = null;
         }
@@ -119,7 +137,7 @@ public partial class CardService(CardRepository cardRepository, ScryfallService 
         {
             filters.ColorIdentity = null;
         }
-        
+
         if (filters?.ColorIdentity == "Colorless")
         {
             filters.ColorIdentity = "";
@@ -129,26 +147,27 @@ public partial class CardService(CardRepository cardRepository, ScryfallService 
             .Where(card => filters?.Name == null || card.Name.Contains(filters?.Name.TrimEnd() ?? string.Empty, StringComparison.CurrentCultureIgnoreCase))
             .Where(card => filters?.IsCommander == null || card.IsCommander == filters?.IsCommander)
             .Where(card => filters?.ColorIdentity == null || card.ColorIdentity!.Equals(filters?.ColorIdentity, StringComparison.CurrentCultureIgnoreCase));
-            // .Where(card => filters.CMC == null || card.CMC == filters.CMC)
-            //.Where(card => filters.TypeLine == null || card.TypeLine.Contains(filters.TypeLine, StringComparison.CurrentCultureIgnoreCase))
-            // .Skip(reference)
-            // .Take(pageSize)
-          
+        // .Where(card => filters.CMC == null || card.CMC == filters.CMC)
+        //.Where(card => filters.TypeLine == null || card.TypeLine.Contains(filters.TypeLine, StringComparison.CurrentCultureIgnoreCase))
 
-        var paginatedCards = cardsFiltered.Skip(reference).Take(pageSize).ToList();
+        var paginatedCards = cardsFiltered
+            .Skip(reference * pageSize)
+            .OrderBy(card => card.Name)
+            .Take(pageSize)
+            .ToList();
 
         memoryCache.Set(cacheKey, paginatedCards);
-        
-        return CreatePaginatedResponse(paginatedCards, pageSize);
+
+        return CreatePaginatedResponse(paginatedCards);
     }
-    
-    private PagedResponseKeyset<Card> CreatePaginatedResponse(List<Card> cards, int pageSize)
+
+    private PagedResponseKeyset<Card> CreatePaginatedResponse(List<Card> cards)
     {
-       return new PagedResponseKeyset<Card>
-       (
-           cards,
-           cards.Any() ? cards.Last().Id : 0
-       );
+        return new PagedResponseKeyset<Card>
+        (
+            cards,
+            cards.Count != 0 ? cards.Last().Id : 0
+        );
     }
 
     [GeneratedRegex(@"Legendary\s*Creature|Summon\s*Legend", RegexOptions.IgnoreCase, "en-EE")]

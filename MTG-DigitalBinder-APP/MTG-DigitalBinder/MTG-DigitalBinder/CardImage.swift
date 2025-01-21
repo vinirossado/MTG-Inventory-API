@@ -12,7 +12,6 @@ struct CardImage: View {
     @State private var reloadAttempts: Int = 0
     @State private var urlString: String
     private let maxRetires: Int = 3
-
     
     init(url: String){
         self.url = url

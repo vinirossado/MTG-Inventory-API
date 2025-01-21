@@ -29,6 +29,22 @@
         "ASPNETCORE_ENVIRONMENT": "Development"
       }
     },
+    "http3": {
+      "commandName": "Project",
+      "dotnetRunMessages": true,
+      "launchBrowser": true,
+      "launchUrl": "scalar/v1",
+      "applicationUrl": "https://localhost:5822",
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Development"
+      },
+      "additionalUrls": "https://localhost:5822",
+      "kestrel": {
+        "endpointDefaults": {
+          "Protocols": "Http1AndHttp2AndHttp3"
+        }
+      }
+    },
     "IIS Express": {
       "commandName": "IISExpress",
       "launchBrowser": true,

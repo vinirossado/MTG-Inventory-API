@@ -59,7 +59,7 @@ class NetworkManager {
         // Inicializar o array de queryItems
         var queryItems = [
             URLQueryItem(name: "reference", value: "0"),
-            URLQueryItem(name: "pageSize", value: "10"),
+            URLQueryItem(name: "pageSize", value: "50"),
         ]
 
         // Criar o filtro JSON
@@ -72,7 +72,7 @@ class NetworkManager {
 
         print("Search Fiter: \(filterDict)")
 
-        if let jsonData = try? JSONSerialization.data( 
+        if let jsonData = try? JSONSerialization.data(
             withJSONObject: filterDict),
             let jsonString = String(data: jsonData, encoding: .utf8)
         {
@@ -140,9 +140,9 @@ class NetworkManager {
         pageSize: Int,
         completion: @escaping (Result<[ServerCard], Error>) -> Void
     ) {
-//        var components = URLComponents(
-//            string: "http://143.198.101.34:7770/api/Card/GetCardsWithPagination"
-//        )
+        //        var components = URLComponents(
+        //            string: "http://143.198.101.34:7770/api/Card/GetCardsWithPagination"
+        //        )
 
         var components = URLComponents(
             string: "http://192.168.1.216:5822/api/Card/GetCardsWithPagination"
@@ -158,8 +158,6 @@ class NetworkManager {
             )
             return
         }
-
-        print("Chamou essa porra")
 
         var request = URLRequest(url: url)
         request.httpMethod = "GET"

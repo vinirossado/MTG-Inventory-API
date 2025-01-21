@@ -7,7 +7,6 @@ using MTG_Inventory.Dtos;
 using MTG_Inventory.Models;
 using MTG_Inventory.Service;
 
-
 namespace MTG_Inventory.Controllers;
 
 [ApiController]
