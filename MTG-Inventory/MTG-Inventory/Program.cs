@@ -11,15 +11,6 @@ using Scalar.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// builder.WebHost.ConfigureKestrel(options =>
-// {
-//     options.ListenAnyIP(5822, listenOptions =>
-//     {
-//         listenOptions.UseHttps();
-//         listenOptions.Protocols = HttpProtocols.Http1AndHttp2AndHttp3;
-//     });
-// });
-
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowSpecificOrigins",

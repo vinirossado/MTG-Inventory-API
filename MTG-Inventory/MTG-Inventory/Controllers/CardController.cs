@@ -85,8 +85,8 @@ public class CardController(CardService cardService) : ControllerBase
     public async Task<ActionResult<PagedResponseKeysetDto<CardResultDto>>> GetCardsWithPagination(
         int reference = 0, int pageSize = 10, [FromQuery] string? filters = null)
     {
-        if (pageSize <= 0)
-            return BadRequest($"{nameof(pageSize)} size must be greater than 0.");
+        // if (pageSize <= 0)
+        //     return BadRequest($"{nameof(pageSize)} size must be greater than 0.");
 
         CardFilterDto? filterDto = null;
         if (!string.IsNullOrEmpty(filters))

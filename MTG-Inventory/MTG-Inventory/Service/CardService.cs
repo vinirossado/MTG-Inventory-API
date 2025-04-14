@@ -80,7 +80,7 @@ public partial class CardService(CardRepository cardRepository, ScryfallService 
 
     private async Task<IList<Card>> GetCardsFromCache()
     {
-        if (memoryCache.TryGetValue(CacheKey, out IList<Card> cachedCards)) return cachedCards;
+        // if (memoryCache.TryGetValue(CacheKey, out IList<Card> cachedCards)) return cachedCards;
 
         var allCardsInDatabase = await cardRepository.Get();
 
@@ -100,8 +100,8 @@ public partial class CardService(CardRepository cardRepository, ScryfallService 
             }
         }
 
-        cachedCards = uniqueCards.Values.ToList();
-        memoryCache.Set(CacheKey, cachedCards);
+        var cachedCards = uniqueCards.Values.ToList();
+        // memoryCache.Set(CacheKey, cachedCards);
 
         return cachedCards;
     }
@@ -116,17 +116,17 @@ public partial class CardService(CardRepository cardRepository, ScryfallService 
         int reference, int pageSize, CardFilterDto filters)
     {
         var filtersJson = JsonSerializer.Serialize(filters);
-        var filtersHash = GerarHash(filtersJson);
-        var cacheKey = $"Cards:Reference:{reference}:PageSize:{pageSize}:Filters:{filtersHash}";
-
-        if (memoryCache.TryGetValue(cacheKey, out List<Card> cachedCards))
-        {
-            return CreatePaginatedResponse(cachedCards);
-        }
+        // var filtersHash = GerarHash(filtersJson);
+        // var cacheKey = $"Cards:Reference:{reference}:PageSize:{pageSize}:Filters:{filtersHash}";
+        //
+        // if (memoryCache.TryGetValue(cacheKey, out List<Card> cachedCards))
+        // {
+        //     return CreatePaginatedResponse(cachedCards);
+        // }
 
         var allCards = await GetCardsFromCache();
 
-        memoryCache.Set(CacheKey, allCards);
+        // memoryCache.Set(CacheKey, allCards);
 
         if (filters?.IsCommander is false)
         {
@@ -143,20 +143,24 @@ public partial class CardService(CardRepository cardRepository, ScryfallService 
             filters.ColorIdentity = "";
         }
 
+        filters ??= new CardFilterDto();
+
+        filters!.TypeLine = "Enchantment";
+
         var cardsFiltered = allCards
             .Where(card => filters?.Name == null || card.Name.Contains(filters?.Name.TrimEnd() ?? string.Empty, StringComparison.CurrentCultureIgnoreCase))
             .Where(card => filters?.IsCommander == null || card.IsCommander == filters?.IsCommander)
-            .Where(card => filters?.ColorIdentity == null || card.ColorIdentity!.Equals(filters?.ColorIdentity, StringComparison.CurrentCultureIgnoreCase));
-        // .Where(card => filters.CMC == null || card.CMC == filters.CMC)
-        //.Where(card => filters.TypeLine == null || card.TypeLine.Contains(filters.TypeLine, StringComparison.CurrentCultureIgnoreCase))
+            .Where(card => filters?.ColorIdentity == null || card.ColorIdentity!.Equals(filters?.ColorIdentity, StringComparison.CurrentCultureIgnoreCase))
+            // .Where(card => filters.CMC == null || card.CMC == filters.CMC)
+            .Where(card => filters.TypeLine == null || card.TypeLine.Contains(filters.TypeLine, StringComparison.CurrentCultureIgnoreCase));
 
         var paginatedCards = cardsFiltered
-            .Skip(reference * pageSize)
+            // .Skip(reference * pageSize)
             .OrderBy(card => card.Name)
-            .Take(pageSize)
+            // .Take(pageSize)
             .ToList();
 
-        memoryCache.Set(cacheKey, paginatedCards);
+        // memoryCache.Set(cacheKey, paginatedCards);
 
         return CreatePaginatedResponse(paginatedCards);
     }
