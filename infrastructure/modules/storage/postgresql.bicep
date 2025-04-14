@@ -57,7 +57,6 @@ resource postgresDbConnectionString 'Microsoft.KeyVault/vaults/secrets@2023-07-0
     value: 'Server=${postgresqlServer.name}.postgres.database.azure.com;Database=inventory;Port=5432;User Id=${administratorLogin};Password=${administratorPassword};Ssl Mode=Require;'
   }
   dependsOn: [
-    postgresqlServer
     keyVault
   ]
 }
