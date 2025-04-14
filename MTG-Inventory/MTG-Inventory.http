@@ -1,0 +1,6 @@
+@MTG_Inventory_HostAddress = http://localhost:5288
+
+GET {{MTG_Inventory_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

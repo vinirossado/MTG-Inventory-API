@@ -1,0 +1,10 @@
+﻿version: "3.3"
+services:
+  mtg-inventory:
+    image: mtg-inventory
+    build:
+      context: .
+      dockerfile: MTG-Inventory/Dockerfile
+    ports:
+      - "7280:8080"
+      - "7281:8081"
