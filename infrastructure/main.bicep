@@ -42,7 +42,6 @@ module apiService 'modules/compute/appservice.bicep' = {
     ]
   }
   dependsOn: [
-    appServicePlan
     keyVault
   ]
 }
