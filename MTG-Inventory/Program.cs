@@ -1,4 +1,5 @@
 using System.Text.Json.Serialization;
+using Azure.Identity;
 using Delta;
 using Microsoft.AspNetCore.Server.Kestrel.Core;
 using Microsoft.EntityFrameworkCore;
@@ -10,6 +11,16 @@ using MTG_Inventory.Service.External.Scryfall;
 using Scalar.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(args);
+
+
+var keyVaultName = builder.Configuration["KeyVault:Vault"];
+ 
+if (!string.IsNullOrWhiteSpace(keyVaultName))
+{
+    builder.Configuration.AddAzureKeyVault(
+        new Uri($"https://{keyVaultName}.vault.azure.net/"),
+        new DefaultAzureCredential());
+}
 
 builder.Services.AddCors(options =>
 {
