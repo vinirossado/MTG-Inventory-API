@@ -52,13 +52,11 @@ resource keyVault 'Microsoft.KeyVault/vaults@2023-07-01' existing = {
 
 // Store PostgreSQL connection string in Key Vault
 resource postgresDbConnectionString 'Microsoft.KeyVault/vaults/secrets@2023-07-01' = {
-  name: '${keyVaultName}/Postgres-ConnectionString'
+  parent: keyVault
+  name: 'Postgres-ConnectionString'
   properties: {
     value: 'Server=${postgresqlServer.name}.postgres.database.azure.com;Database=inventory;Port=5432;User Id=${administratorLogin};Password=${administratorPassword};Ssl Mode=Require;'
   }
-  dependsOn: [
-    keyVault
-  ]
 }
 
 output serverId string = postgresqlServer.id
