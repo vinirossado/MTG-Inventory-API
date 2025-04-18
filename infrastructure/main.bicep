@@ -5,7 +5,7 @@ var uniqueId = uniqueString(resourceGroup().id)
 param pgSqlPassword string
 
 var keyVaultName = 'kv-${uniqueId}'
-var appServicePlanName = 'plan-api-${uniqueId}'
+var appServicePlanName = 'plan-api-2g45mzh7gjumo'
 
 // Key Vault deployment
 module keyVault 'modules/secrets/keyvault.bicep' = {
