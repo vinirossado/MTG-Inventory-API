@@ -1,9 +1,10 @@
+// filepath: /Users/vinicius.rossado/Documents/PersonalDev/CSharp/MTG-Inventory-API/infrastructure/modules/compute/appservice.bicep
 param location string = resourceGroup().location
 param appName string
 param keyVaultName string
 param appSettings array = []
 param serverFarmId string
-param linuxFxVersion string = 'DOTNETCORE|9.0' // Default to .NET 9, but can be overridden
+param linuxFxVersion string = 'DOTNETCORE|8.0' // Using .NET 8.0 for Linux
 param dockerRegistryUrl string = ''
 param isContainer bool = false
 
@@ -56,6 +57,7 @@ resource webApp 'Microsoft.Web/sites@2023-12-01' = {
       alwaysOn: true
     }
   }
+  kind: 'app,linux'  // Explicitly specify Linux app
 }
 
 resource webAppConfig 'Microsoft.Web/sites/config@2023-12-01' = {
