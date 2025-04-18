@@ -16,13 +16,9 @@ module keyVault 'modules/secrets/keyvault.bicep' = {
   }
 }
 
-// App Service Plan deployment
-module appServicePlan 'modules/compute/appserviceplan.bicep' = {
-  name: 'appServicePlanDeployment'
-  params: {
-    appServicePlanName: appServicePlanName
-    location: location
-  }
+// Reference to existing App Service Plan
+resource existingAppServicePlan 'Microsoft.Web/serverfarms@2023-12-01' existing = {
+  name: appServicePlanName
 }
 
 // API Service deployment
@@ -30,7 +26,7 @@ module apiService 'modules/compute/appservice.bicep' = {
   name: 'apiDeployment'
   params: {
     appName: 'mtg-${uniqueId}'
-    serverFarmId: appServicePlan.outputs.id
+    serverFarmId: existingAppServicePlan.id
     location: location
     keyVaultName: keyVaultName
     linuxFxVersion: 'DOTNETCORE|9.0'
