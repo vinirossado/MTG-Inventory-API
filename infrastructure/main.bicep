@@ -16,9 +16,10 @@ module keyVault 'modules/secrets/keyvault.bicep' = {
   }
 }
 
-// Reference to existing App Service Plan
-resource existingAppServicePlan 'Microsoft.Web/serverfarms@2023-12-01' existing = {
+// Reference to existing App Service Plan in another resource group
+resource existingAppServicePlan 'Microsoft.Web/serverfarms@2021-03-01' existing = {
   name: appServicePlanName
+  scope: resourceGroup('urlshortener-dev')
 }
 
 // API Service deployment
