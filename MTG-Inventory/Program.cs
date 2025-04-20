@@ -22,16 +22,39 @@ if (!string.IsNullOrWhiteSpace(keyVaultName))
         new DefaultAzureCredential());
 }
 
-// Get the connection string from configuration
-var connectionString = builder.Configuration["Postgres:ConnectionString"];
-logger.LogInformation("PostgreSQL Connection String available: {Available}", connectionString);
+// Get the connection string from configuration - try inventory specific connection first
+var connectionString = builder.Configuration["Postgres:InventoryConnectionString"];
+logger.LogInformation("PostgreSQL Inventory Connection String available: {Available}", !string.IsNullOrEmpty(connectionString));
 
-// Try alternate key format if not found
+// Try standard Postgres connection string if inventory specific not found
 if (string.IsNullOrEmpty(connectionString))
 {
-    logger.LogInformation("Trying alternate connection string format (Postgres--ConnectionString)");
-    connectionString = builder.Configuration["Postgres--ConnectionString"];
-    logger.LogInformation("Alternate PostgreSQL Connection String available: {Available}", connectionString);
+    logger.LogInformation("Inventory specific connection string not found, trying standard Postgres connection string");
+    connectionString = builder.Configuration["Postgres:ConnectionString"];
+    logger.LogInformation("PostgreSQL Connection String available: {Available}", !string.IsNullOrEmpty(connectionString));
+}
+
+// Try alternate key format if still not found
+if (string.IsNullOrEmpty(connectionString))
+{
+    logger.LogInformation("Trying alternate connection string format (Postgres--InventoryConnectionString)");
+    connectionString = builder.Configuration["Postgres--InventoryConnectionString"];
+    logger.LogInformation("Alternate PostgreSQL Inventory Connection String available: {Available}", !string.IsNullOrEmpty(connectionString));
+    
+    if (string.IsNullOrEmpty(connectionString))
+    {
+        logger.LogInformation("Trying standard alternate connection string format (Postgres--ConnectionString)");
+        connectionString = builder.Configuration["Postgres--ConnectionString"];
+        logger.LogInformation("Alternate PostgreSQL Connection String available: {Available}", !string.IsNullOrEmpty(connectionString));
+    }
+}
+
+// Try getting from ConnectionStrings section as last resort
+if (string.IsNullOrEmpty(connectionString))
+{
+    logger.LogInformation("Trying connection string from ConnectionStrings:DefaultConnection");
+    connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+    logger.LogInformation("DefaultConnection available: {Available}", !string.IsNullOrEmpty(connectionString));
 }
 
 if (string.IsNullOrEmpty(connectionString))
