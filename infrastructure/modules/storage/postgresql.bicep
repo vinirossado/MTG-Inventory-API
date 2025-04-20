@@ -27,17 +27,13 @@ resource postgresqlServer 'Microsoft.DBforPostgreSQL/flexibleServers@2023-12-01-
       publicNetworkAccess: 'Enabled'
     }
   }
-  
-  resource database 'database' = {
-    name: 'inventory'
-  }
 }
 
 // Define the database as a separate resource under the PostgreSQL server
-// resource database 'Microsoft.DBforPostgreSQL/flexibleServers/databases@2023-12-01-preview' = {
-//   parent: postgresqlServer
-//   name: 'inventory'
-// }
+resource database 'Microsoft.DBforPostgreSQL/flexibleServers/databases@2023-12-01-preview' = {
+  parent: postgresqlServer
+  name: 'inventory'
+}
 
 // Firewall rule to allow Azure services
 resource firewallRule 'Microsoft.DBforPostgreSQL/flexibleServers/firewallRules@2023-12-01-preview' = {

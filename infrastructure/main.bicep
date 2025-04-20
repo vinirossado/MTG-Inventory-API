@@ -14,7 +14,6 @@ module keyVault 'modules/secrets/keyvault.bicep' = {
     vaultName: keyVaultName
     location: location
   }
-  scope: resourceGroup('urlshortener-dev')
 }
 
 // Reference to existing App Service Plan in another resource group
