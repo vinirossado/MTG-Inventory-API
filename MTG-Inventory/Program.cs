@@ -1,8 +1,8 @@
 using System.Text.Json.Serialization;
 using Azure.Identity;
-
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging.Console;
-
+using MTG_Inventory;
 using MTG_Inventory.Mapping;
 using MTG_Inventory.Repository;
 using MTG_Inventory.Service;
@@ -74,8 +74,8 @@ builder.Services.AddMemoryCache();
 
 // Register DbContext with DI container
 var configuration = builder.Configuration;
-// builder.Services.AddDbContext<AppDbContext>(options =>
-//     options.UseNpgsql(configuration.GetConnectionString("DefaultConnection")));
+builder.Services.AddDbContext<AppDbContext>(options =>
+    options.UseNpgsql(configuration.GetConnectionString(connectionString)));
 
 // Register ImportRepository with DI container
 builder.Services.AddScoped<CardService>();
