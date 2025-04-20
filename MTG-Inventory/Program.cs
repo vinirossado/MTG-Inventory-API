@@ -1,9 +1,8 @@
 using System.Text.Json.Serialization;
 using Azure.Identity;
-using Delta;
-using Microsoft.AspNetCore.Server.Kestrel.Core;
-using Microsoft.EntityFrameworkCore;
-using MTG_Inventory;
+
+using Microsoft.Extensions.Logging.Console;
+
 using MTG_Inventory.Mapping;
 using MTG_Inventory.Repository;
 using MTG_Inventory.Service;
@@ -12,6 +11,7 @@ using Scalar.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
+var logger = builder.Services.BuildServiceProvider().GetRequiredService<ILogger<Program>>();
 
 var keyVaultName = builder.Configuration["KeyVault:Vault"];
  
@@ -46,6 +46,7 @@ builder.Services.AddHealthChecks()
 
 
 builder.Services.AddCors(options =>
+
 {
     options.AddPolicy("AllowSpecificOrigins",
         builder =>
