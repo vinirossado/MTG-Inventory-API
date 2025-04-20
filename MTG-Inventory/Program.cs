@@ -22,6 +22,29 @@ if (!string.IsNullOrWhiteSpace(keyVaultName))
         new DefaultAzureCredential());
 }
 
+// Get the connection string from configuration
+var connectionString = builder.Configuration["Postgres:ConnectionString"];
+logger.LogInformation("PostgreSQL Connection String available: {Available}", connectionString);
+
+// Try alternate key format if not found
+if (string.IsNullOrEmpty(connectionString))
+{
+    logger.LogInformation("Trying alternate connection string format (Postgres--ConnectionString)");
+    connectionString = builder.Configuration["Postgres--ConnectionString"];
+    logger.LogInformation("Alternate PostgreSQL Connection String available: {Available}", connectionString);
+}
+
+if (string.IsNullOrEmpty(connectionString))
+{
+    logger.LogCritical("No PostgreSQL connection string found in configuration");
+    throw new InvalidOperationException("PostgreSQL connection string not found. Please ensure it's configured in the application settings or Key Vault.");
+}
+
+// Add health checks with the connection string
+builder.Services.AddHealthChecks()
+    .AddNpgSql(connectionString, name: "postgresql", tags: new[] { "db", "sql", "postgresql" });
+
+
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowSpecificOrigins",
@@ -50,8 +73,8 @@ builder.Services.AddMemoryCache();
 
 // Register DbContext with DI container
 var configuration = builder.Configuration;
-builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseNpgsql(configuration.GetConnectionString("DefaultConnection")));
+// builder.Services.AddDbContext<AppDbContext>(options =>
+//     options.UseNpgsql(configuration.GetConnectionString("DefaultConnection")));
 
 // Register ImportRepository with DI container
 builder.Services.AddScoped<CardService>();
@@ -68,6 +91,8 @@ builder.Services.AddOpenApi();
 
 var app = builder.Build();
 app.MapHealthChecks("/healthz");
+app.MapGet("/", () => "URL Shortener API");
+app.MapGet("/health", () => Results.Ok("Healthy"));
 
 if (app.Environment.IsDevelopment())
 {
