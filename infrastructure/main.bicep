@@ -4,7 +4,7 @@ var uniqueId = uniqueString(resourceGroup().id)
 @secure()
 param pgSqlPassword string
 
-var keyVaultName = 'kv-${uniqueId}'
+var keyVaultName = 'kv-2g45mzh7gjumo'
 var appServicePlanName = 'plan-api-2g45mzh7gjumo'
 
 // Key Vault deployment
@@ -14,6 +14,7 @@ module keyVault 'modules/secrets/keyvault.bicep' = {
     vaultName: keyVaultName
     location: location
   }
+  scope: resourceGroup('urlshortener-dev')
 }
 
 // Reference to existing App Service Plan in another resource group
